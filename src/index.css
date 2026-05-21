@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Dark mode — default */
+:root {
+  --bg: #0C1A0E;
+  --surface: #111E13;
+  --surface2: #192618;
+  --border: #223022;
+  --text: #EDE8D8;
+  --muted: #7A9070;
+  --accent: #D4C9A0;
+  --danger: #E07070;
+  --success: #7DC47A;
+}
+
+/* Light mode */
+html.light {
+  --bg: #F4F1E4;
+  --surface: #FFFFFF;
+  --surface2: #EDE9D8;
+  --border: #D4CEB8;
+  --text: #1A2E1C;
+  --muted: #5A7060;
+  --accent: #1A3A1C;
+  --danger: #C04040;
+  --success: #2A7028;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior: none;
+}
+
+#root {
+  min-height: 100dvh;
+  background-color: var(--bg);
+  display: flex;
+  flex-direction: column;
+}
+
+input,
+button {
+  font-family: inherit;
+}
+
+/* Prevent zoom on input focus on iOS */
+input[type='text'],
+input[type='number'] {
+  font-size: 16px;
+}
