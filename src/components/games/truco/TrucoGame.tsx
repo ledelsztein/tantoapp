@@ -139,23 +139,23 @@ export default function TrucoGame() {
           <ChicoDots won={data.chicosWon} total={s.config.totalChicos} />
         </div>
 
-        {/* Points + badge */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-baseline gap-2">
-            <span className="text-7xl font-bold text-text tabular-nums leading-none">{pts}</span>
-            <button
-              onClick={() => setEditTeam(team)}
-              className="text-muted p-1 active:scale-90 transition-transform mb-1"
-              aria-label="Corregir"
-            >
-              <svg width="15" height="15" viewBox="0 0 14 14" fill="none">
-                <path d="M10 2L12 4L5 11H3V9L10 2Z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </button>
-          </div>
+        {/* Points */}
+        <span className="text-7xl font-bold text-text tabular-nums leading-none">{pts}</span>
+
+        {/* Badge + edit */}
+        <div className="flex items-center gap-2">
           <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${pts > 15 ? 'bg-success/15 text-success' : 'bg-muted/10 text-muted'}`}>
             {pts > 15 ? 'Buenas' : 'Malas'}
           </span>
+          <button
+            onClick={() => setEditTeam(team)}
+            className="text-muted p-1 active:scale-90 transition-transform"
+            aria-label="Corregir"
+          >
+            <svg width="15" height="15" viewBox="0 0 14 14" fill="none">
+              <path d="M10 2L12 4L5 11H3V9L10 2Z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
         </div>
 
         {/* Cajas */}
@@ -218,10 +218,13 @@ export default function TrucoGame() {
 
       <AdPlaceholder />
 
-      {/* Pica a pica toast — fixed, no layout shift */}
+      {/* Pica a pica toast — fixed en centro de pantalla, no afecta layout */}
       {picaPicaMsg && (
-        <div className="fixed bottom-16 left-1/2 -translate-x-1/2 z-40 px-5 py-3 bg-bg border border-accent/50 rounded-2xl shadow-xl text-center pointer-events-none">
-          <p className="text-accent font-bold text-base whitespace-nowrap">{picaPicaMsg}</p>
+        <div
+          style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 50 }}
+          className="px-6 py-4 bg-bg border-2 border-accent/60 rounded-2xl shadow-2xl text-center pointer-events-none"
+        >
+          <p className="text-accent font-bold text-xl whitespace-nowrap">{picaPicaMsg}</p>
         </div>
       )}
 

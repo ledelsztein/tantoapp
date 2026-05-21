@@ -148,14 +148,13 @@ export default function Home() {
   const diezMilPhase = useDiezMilStore((s) => s.phase)
   const burakoPhase = useBurakoStore((s) => s.phase)
 
-  const activeGame = (() => {
-    if (trucoPhase === 'playing') return { id: 'truco', label: 'Truco', path: '/truco/game' }
-    if (basasPhase === 'playing') return { id: 'basas', label: 'Basas', path: '/basas/game' }
-    if (generalaPhase === 'playing') return { id: 'generala', label: 'Generala', path: '/generala/game' }
-    if (diezMilPhase === 'playing') return { id: 'diez_mil', label: '10 Mil', path: '/diez-mil/game' }
-    if (burakoPhase === 'playing') return { id: 'burako', label: 'Burako', path: '/burako/game' }
-    return null
-  })()
+  const gamePhases: Record<string, string> = {
+    truco: trucoPhase,
+    basas: basasPhase,
+    generala: generalaPhase,
+    diez_mil: diezMilPhase,
+    burako: burakoPhase,
+  }
 
   const handleShare = async () => {
     const url = window.location.origin
@@ -219,31 +218,13 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Resume banner */}
-      {activeGame && (
-        <div className="mx-4 mb-3">
-          <button
-            onClick={() => navigate(activeGame.path)}
-            className="w-full flex items-center justify-between px-4 py-3.5 bg-accent/10 border border-accent/30 rounded-2xl text-left active:scale-[0.99] transition-transform"
-          >
-            <div>
-              <p className="text-xs text-accent/70 font-medium mb-0.5">Partida en curso</p>
-              <p className="text-text font-semibold text-sm">Retomar {activeGame.label}</p>
-            </div>
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="text-accent shrink-0">
-              <path d="M6 4L10 8L6 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
-        </div>
-      )}
-
       {/* Game grid */}
       <main className="flex-1 px-4 pb-4">
         <p className="text-muted text-xs font-medium uppercase tracking-widest mb-3 px-1">Juegos</p>
         <div className="grid grid-cols-2 gap-3">
           {GAMES.map((game) => {
             const Illustration = game.illustration
-            const isActive = activeGame?.id === game.id
+            const isActive = game.available && gamePhases[game.id] === 'playing'
 
             if (!game.available) {
               return (
@@ -274,7 +255,7 @@ export default function Home() {
                 <div className="flex items-center justify-between">
                   <span className="text-text font-semibold text-sm">{game.label}</span>
                   {isActive && (
-                    <span className="w-2 h-2 rounded-full bg-success shrink-0" />
+                    <span className="w-3 h-3 rounded-full bg-success shrink-0" />
                   )}
                 </div>
               </button>
