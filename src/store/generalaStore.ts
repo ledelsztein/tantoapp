@@ -9,10 +9,8 @@ export function calcGeneralaScore(cat: GeneralaCategory, served: boolean, diceVa
   if (['ones','twos','threes','fours','fives','sixes'].includes(cat)) {
     return diceValue ?? 0
   }
-  if (cat === 'generala' && served) return 50
-  if (cat === 'generala') return 0
-  if (cat === 'generala_doble' && served) return 100
-  if (cat === 'generala_doble') return 0
+  if (cat === 'generala') return 50         // servida gana la partida, score es siempre 50
+  if (cat === 'generala_doble') return 100  // idem, score es siempre 100
   return GENERALA_BASE_SCORES[cat] + (served ? GENERALA_SERVED_BONUS[cat] : 0)
 }
 

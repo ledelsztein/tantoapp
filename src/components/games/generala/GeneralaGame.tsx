@@ -19,78 +19,73 @@ interface EntryModalProps {
 }
 
 function EntryModal({ category, canFill, onClose, onConfirm }: EntryModalProps) {
-  const [served, setServed] = useState(false)
-  const [crossed, setCrossed] = useState(!canFill)
-  const [numericVal, setNumericVal] = useState(0)
-
   const isNumeric = NUMERIC_CATS.has(category)
   const diceVal = DICE_VALUES[category]
-  const canServe = !isNumeric
+  const isSpecial = category === 'generala' || category === 'generala_doble'
   const label = GENERALA_CATEGORY_LABELS[category]
 
-  const previewScore = crossed ? 0 : isNumeric
-    ? numericVal
-    : calcGeneralaScore(category, served)
+  const scoreNormal = calcGeneralaScore(category, false)
+  const scoreServed = calcGeneralaScore(category, true)
+
+  const record = (score: number, served: boolean, crossed: boolean) =>
+    onConfirm(score, served, crossed)
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center p-4 pb-8 bg-black/60 backdrop-blur-sm">
-      <div className="w-full max-w-sm bg-surface rounded-2xl p-5 flex flex-col gap-4 shadow-2xl">
-        <h2 className="text-text text-lg font-semibold text-center">{label}</h2>
+      <div className="w-full max-w-sm bg-surface rounded-2xl p-5 flex flex-col gap-3 shadow-2xl">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <h2 className="text-text text-lg font-semibold">{label}</h2>
+          <button onClick={onClose} className="text-muted active:opacity-60 p-1">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <line x1="4" y1="4" x2="14" y2="14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+              <line x1="14" y1="4" x2="4" y2="14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+            </svg>
+          </button>
+        </div>
 
         {!canFill && (
-          <p className="text-muted text-xs text-center bg-surface2 rounded-lg px-3 py-2">
+          <p className="text-muted text-xs bg-surface2 rounded-lg px-3 py-2">
             Necesitás tener Generala anotada para completar esta categoría
           </p>
         )}
 
-        {canFill && !crossed && (
-          <>
-            {isNumeric && (
-              <div className="flex flex-col gap-2">
-                <p className="text-muted text-xs text-center">¿Cuánto puntaje suma?</p>
-                <div className="flex gap-2">
-                  {[0,1,2,3,4,5].map((n) => (
-                    <button key={n} onClick={() => setNumericVal(n * diceVal)}
-                      className={`flex-1 h-11 rounded-xl text-sm font-bold transition-colors ${numericVal === n * diceVal ? 'bg-accent text-bg' : 'bg-surface2 text-text'}`}>
-                      {n * diceVal}
-                    </button>
-                  ))}
-                </div>
+        {canFill && (
+          isNumeric ? (
+            <>
+              <p className="text-muted text-xs text-center">¿Cuánto puntaje suma?</p>
+              <div className="flex gap-2">
+                {[0,1,2,3,4,5].map((n) => (
+                  <button key={n} onClick={() => record(n * diceVal, false, false)}
+                    className="flex-1 h-11 rounded-xl bg-surface2 text-text text-sm font-bold active:scale-95 transition-all active:bg-accent active:text-bg">
+                    {n * diceVal}
+                  </button>
+                ))}
               </div>
-            )}
-            {canServe && (
-              <button onClick={() => setServed(!served)}
-                className={`flex items-center justify-between px-4 h-12 rounded-xl border transition-colors ${served ? 'border-accent bg-accent/10 text-accent' : 'border-border bg-surface2 text-muted'}`}>
-                <span className="text-sm font-medium">Servida</span>
-                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${served ? 'border-accent bg-accent' : 'border-muted'}`}>
-                  {served && <div className="w-2 h-2 rounded-full bg-bg"/>}
-                </div>
+            </>
+          ) : (
+            <div className="flex gap-2">
+              <button onClick={() => record(scoreNormal, false, false)}
+                className="flex-1 h-14 rounded-xl bg-surface2 text-text font-semibold active:scale-95 transition-all flex flex-col items-center justify-center gap-0.5">
+                <span className="text-xs text-muted">Normal</span>
+                <span className="text-lg font-bold tabular-nums">{scoreNormal}</span>
               </button>
-            )}
-            {(category === 'generala' || category === 'generala_doble') && served && (
-              <p className="text-success text-xs text-center font-medium">¡Gana la partida al instante!</p>
-            )}
-          </>
+              <button onClick={() => record(scoreServed, true, false)}
+                className="flex-1 h-14 rounded-xl bg-accent/10 border border-accent/40 text-accent font-semibold active:scale-95 transition-all flex flex-col items-center justify-center gap-0.5">
+                <span className="text-xs opacity-70">Servida</span>
+                <span className="text-lg font-bold tabular-nums">
+                  {isSpecial ? '★ Gana' : scoreServed}
+                </span>
+              </button>
+            </div>
+          )
         )}
 
-        <button onClick={() => setCrossed(!crossed)}
-          className={`flex items-center justify-between px-4 h-12 rounded-xl border transition-colors ${crossed ? 'border-danger bg-danger/10 text-danger' : 'border-border bg-surface2 text-muted'}`}>
-          <span className="text-sm font-medium">Tachar (0 pts)</span>
-          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${crossed ? 'border-danger bg-danger' : 'border-muted'}`}>
-            {crossed && <div className="w-2 h-2 rounded-full bg-bg"/>}
-          </div>
+        {/* Tachar — siempre disponible */}
+        <button onClick={() => record(0, false, true)}
+          className="h-11 rounded-xl border border-danger/40 text-danger text-sm font-medium active:scale-95 transition-all active:bg-danger/10">
+          Tachar (0 pts)
         </button>
-
-        <div className="flex items-center justify-between px-1">
-          <span className="text-muted text-sm">Puntaje</span>
-          <span className={`text-2xl font-bold tabular-nums ${previewScore > 0 ? 'text-text' : 'text-muted'}`}>{previewScore}</span>
-        </div>
-
-        <div className="flex gap-3">
-          <button onClick={onClose} className="flex-1 h-12 rounded-xl bg-surface2 text-muted font-medium">Cancelar</button>
-          <button onClick={() => onConfirm(previewScore, served, crossed)}
-            className="flex-1 h-12 rounded-xl bg-accent text-bg font-medium">Confirmar</button>
-        </div>
       </div>
     </div>
   )
