@@ -321,6 +321,7 @@ export default function BasasGame() {
         </button>
       </div>
       <AdPlaceholder />
+      {showScoreboard && <FullScoreboard onClose={() => setShowScoreboard(false)} />}
     </div>
   )
 }
