@@ -45,6 +45,7 @@ export interface BasasConfig {
 export interface BasasRound {
   roundNumber: number
   bazasAvailable: number
+  biddingOrder: number[]   // player indices in bid order for this round
   bids: (number | null)[]
   results: (number | null)[]
   scores: (number | null)[]
@@ -57,8 +58,9 @@ export interface BasasGameState {
   rounds: BasasRound[]
   roundSequence: number[]
   currentRoundIndex: number
+  currentRoundDealerIndex: number
   currentPhase: BasasRoundPhase
-  currentPlayerTurn: number
+  currentPlayerTurn: number  // position in biddingOrder (0..N-1)
   totalScores: number[]
   phase: GamePhase
   winner: number | null

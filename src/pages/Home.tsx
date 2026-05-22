@@ -111,7 +111,7 @@ const GAMES = [
   },
   {
     id: 'basas',
-    label: 'Basas',
+    label: 'Bazas',
     path: '/basas',
     illustration: BasasIllustration,
     available: true,

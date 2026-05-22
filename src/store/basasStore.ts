@@ -7,15 +7,20 @@ function buildRoundSequence(maxBazas: number, format: 'ida' | 'ida_vuelta'): num
   for (let i = 1; i <= maxBazas; i++) up.push(i)
   const down: number[] = []
   for (let i = maxBazas - 1; i >= 1; i--) down.push(i)
-
   if (format === 'ida') return [...up, ...down]
   return [...up, ...up]
 }
 
-function makeRound(roundNumber: number, playerCount: number): BasasRound {
+function getBiddingOrder(playerCount: number, dealerIndex: number, direction: 'cw' | 'ccw'): number[] {
+  const step = direction === 'cw' ? 1 : playerCount - 1
+  return Array.from({ length: playerCount }, (_, i) => (dealerIndex + i * step) % playerCount)
+}
+
+function makeRound(roundNumber: number, playerCount: number, biddingOrder: number[]): BasasRound {
   return {
     roundNumber,
     bazasAvailable: roundNumber,
+    biddingOrder,
     bids: Array(playerCount).fill(null),
     results: Array(playerCount).fill(null),
     scores: Array(playerCount).fill(null),
@@ -32,6 +37,7 @@ const DEFAULT_STATE: BasasGameState = {
   rounds: [],
   roundSequence: [],
   currentRoundIndex: 0,
+  currentRoundDealerIndex: 0,
   currentPhase: 'bidding',
   currentPlayerTurn: 0,
   totalScores: [],
@@ -46,7 +52,6 @@ interface BasasStore extends BasasGameState {
   submitBid: (bid: number) => void
   submitResult: (result: number) => void
   confirmRoundSummary: () => void
-  correctRound: (roundIndex: number, playerIndex: number, bid: number | null, result: number | null) => void
   resetGame: () => void
   abandonGame: () => void
 }
@@ -58,15 +63,14 @@ export const useBasasStore = create<BasasStore>()(
 
       startGame: (config) => {
         const seq = buildRoundSequence(config.maxBazas, config.format)
-        const firstRound = makeRound(seq[0], config.players.length)
+        const order = getBiddingOrder(config.players.length, config.firstDealerIndex, config.direction)
+        const firstRound = makeRound(seq[0], config.players.length, order)
         set({
           ...DEFAULT_STATE,
           config,
           rounds: [firstRound],
           roundSequence: seq,
-          currentRoundIndex: 0,
-          currentPhase: 'bidding',
-          currentPlayerTurn: 0,
+          currentRoundDealerIndex: config.firstDealerIndex,
           totalScores: Array(config.players.length).fill(0),
           phase: 'playing',
           startedAt: new Date().toISOString(),
@@ -76,39 +80,41 @@ export const useBasasStore = create<BasasStore>()(
 
       submitBid: (bid) => {
         const s = get()
-        const rounds = [...s.rounds]
-        const round = { ...rounds[s.currentRoundIndex] }
+        const round = { ...s.rounds[s.currentRoundIndex] }
+        const playerIndex = round.biddingOrder[s.currentPlayerTurn]
         const bids = [...round.bids]
-        bids[s.currentPlayerTurn] = bid
+        bids[playerIndex] = bid
         round.bids = bids
+        const rounds = [...s.rounds]
         rounds[s.currentRoundIndex] = round
 
-        const nextPlayer = s.currentPlayerTurn + 1
-        if (nextPlayer >= s.config.players.length) {
+        const nextTurn = s.currentPlayerTurn + 1
+        if (nextTurn >= s.config.players.length) {
           set({ rounds, currentPhase: 'results', currentPlayerTurn: 0, updatedAt: new Date().toISOString() })
         } else {
-          set({ rounds, currentPlayerTurn: nextPlayer, updatedAt: new Date().toISOString() })
+          set({ rounds, currentPlayerTurn: nextTurn, updatedAt: new Date().toISOString() })
         }
       },
 
       submitResult: (result) => {
         const s = get()
-        const rounds = [...s.rounds]
-        const round = { ...rounds[s.currentRoundIndex] }
+        const round = { ...s.rounds[s.currentRoundIndex] }
+        const playerIndex = round.biddingOrder[s.currentPlayerTurn]
         const results = [...round.results]
         const scores = [...round.scores]
-        const bid = round.bids[s.currentPlayerTurn] ?? 0
-        results[s.currentPlayerTurn] = result
-        scores[s.currentPlayerTurn] = calcScore(bid, result)
+        const bid = round.bids[playerIndex] ?? 0
+        results[playerIndex] = result
+        scores[playerIndex] = calcScore(bid, result)
         round.results = results
         round.scores = scores
+        const rounds = [...s.rounds]
         rounds[s.currentRoundIndex] = round
 
-        const nextPlayer = s.currentPlayerTurn + 1
-        if (nextPlayer >= s.config.players.length) {
+        const nextTurn = s.currentPlayerTurn + 1
+        if (nextTurn >= s.config.players.length) {
           set({ rounds, currentPhase: 'summary', currentPlayerTurn: 0, updatedAt: new Date().toISOString() })
         } else {
-          set({ rounds, currentPlayerTurn: nextPlayer, updatedAt: new Date().toISOString() })
+          set({ rounds, currentPlayerTurn: nextTurn, updatedAt: new Date().toISOString() })
         }
       },
 
@@ -121,17 +127,16 @@ export const useBasasStore = create<BasasStore>()(
         if (nextIndex >= s.roundSequence.length) {
           const maxScore = Math.max(...newTotals)
           const winnerIdx = newTotals.indexOf(maxScore)
-          set({
-            totalScores: newTotals,
-            phase: 'end',
-            winner: winnerIdx,
-            updatedAt: new Date().toISOString(),
-          })
+          set({ totalScores: newTotals, phase: 'end', winner: winnerIdx, updatedAt: new Date().toISOString() })
         } else {
-          const nextRound = makeRound(s.roundSequence[nextIndex], s.config.players.length)
+          const step = s.config.direction === 'cw' ? 1 : s.config.players.length - 1
+          const nextDealer = (s.currentRoundDealerIndex + step) % s.config.players.length
+          const nextOrder = getBiddingOrder(s.config.players.length, nextDealer, s.config.direction)
+          const nextRound = makeRound(s.roundSequence[nextIndex], s.config.players.length, nextOrder)
           set({
             rounds: [...s.rounds, nextRound],
             currentRoundIndex: nextIndex,
+            currentRoundDealerIndex: nextDealer,
             currentPhase: 'bidding',
             currentPlayerTurn: 0,
             totalScores: newTotals,
@@ -140,36 +145,17 @@ export const useBasasStore = create<BasasStore>()(
         }
       },
 
-      correctRound: (roundIndex, playerIndex, bid, result) => {
-        const s = get()
-        const rounds = s.rounds.map((r, ri) => {
-          if (ri !== roundIndex) return r
-          const bids = [...r.bids]
-          const results = [...r.results]
-          const scores = [...r.scores]
-          if (bid !== null) bids[playerIndex] = bid
-          if (result !== null) results[playerIndex] = result
-          if (bids[playerIndex] !== null && results[playerIndex] !== null) {
-            scores[playerIndex] = calcScore(bids[playerIndex]!, results[playerIndex]!)
-          }
-          return { ...r, bids, results, scores }
-        })
-        const newTotals = Array(s.config.players.length).fill(0)
-        rounds.forEach((r) => {
-          r.scores.forEach((sc, i) => { if (sc !== null) newTotals[i] += sc })
-        })
-        set({ rounds, totalScores: newTotals, updatedAt: new Date().toISOString() })
-      },
-
       resetGame: () => {
         const { config } = get()
         const seq = buildRoundSequence(config.maxBazas, config.format)
-        const firstRound = makeRound(seq[0], config.players.length)
+        const order = getBiddingOrder(config.players.length, config.firstDealerIndex, config.direction)
+        const firstRound = makeRound(seq[0], config.players.length, order)
         set({
           ...DEFAULT_STATE,
           config,
           rounds: [firstRound],
           roundSequence: seq,
+          currentRoundDealerIndex: config.firstDealerIndex,
           totalScores: Array(config.players.length).fill(0),
           phase: 'playing',
           startedAt: new Date().toISOString(),
