@@ -43,12 +43,19 @@ function FullScoreboard({ onClose }: { onClose?: () => void }) {
                     <td className={`text-xs py-2 pr-3 font-medium tabular-nums ${isCurrent ? 'text-accent' : 'text-muted'}`}>{roundNum}</td>
                     {s.config.players.map((_, pi) => {
                       const sc = played?.scores[pi]
+                      const bid = played?.bids[pi]
+                      const result = played?.results[pi]
                       return (
-                        <td key={pi} className="text-center py-2 px-1">
+                        <td key={pi} className="text-center py-1.5 px-1">
                           {sc !== null && sc !== undefined ? (
-                            <span className={`text-xs font-medium tabular-nums ${sc >= 0 ? 'text-success' : 'text-danger'}`}>
-                              {sc > 0 ? `+${sc}` : sc}
-                            </span>
+                            <div className="flex flex-col items-center gap-0.5">
+                              <span className="text-muted text-[10px] tabular-nums leading-none">
+                                {bid ?? '?'}/{result ?? '?'}
+                              </span>
+                              <span className={`text-xs font-semibold tabular-nums leading-none ${sc >= 0 ? 'text-success' : 'text-danger'}`}>
+                                {sc > 0 ? `+${sc}` : sc}
+                              </span>
+                            </div>
                           ) : isPast ? (
                             <span className="text-muted text-xs">—</span>
                           ) : (
@@ -249,7 +256,7 @@ export default function BasasGame() {
     )
   }
 
-  // ─── Summary phase ───────────────────────────────────────────────────────────
+  // ─── Summary phase — resumen compacto, sin tabla completa ───────────────────
 
   return (
     <div className="flex flex-col min-h-dvh bg-bg">
@@ -258,8 +265,51 @@ export default function BasasGame() {
         onNuevaPartida={() => { s.abandonGame(); navigate('/basas/setup') }}
         extraContent={ScoreboardBtn}/>
 
-      <div className="flex-1 overflow-y-auto">
-        <FullScoreboard />
+      <div className="flex-1 px-4 py-3 overflow-y-auto">
+        <p className="text-muted text-xs font-medium uppercase tracking-widest mb-3">
+          Resultado — Ronda {round.roundNumber}
+        </p>
+
+        {/* Compact per-player result */}
+        <div className="bg-surface rounded-2xl overflow-hidden mb-4">
+          {round.biddingOrder.map((pi) => {
+            const bid = round.bids[pi] ?? 0
+            const result = round.results[pi] ?? 0
+            const score = round.scores[pi] ?? 0
+            const hit = bid === result
+            return (
+              <div key={pi} className={`flex items-center justify-between px-4 py-3 border-b border-border/40 last:border-0`}>
+                <span className="text-text font-medium text-sm">{s.config.players[pi]}</span>
+                <div className="flex items-center gap-4">
+                  <div className="text-center">
+                    <p className="text-muted text-[10px]">Pidió</p>
+                    <p className="text-text font-bold tabular-nums">{bid}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-muted text-[10px]">Ganó</p>
+                    <p className={`font-bold tabular-nums ${hit ? 'text-success' : 'text-danger'}`}>{result}</p>
+                  </div>
+                  <div className="text-center min-w-[3rem]">
+                    <p className="text-muted text-[10px]">Puntos</p>
+                    <p className={`font-bold tabular-nums text-sm ${score >= 0 ? 'text-success' : 'text-danger'}`}>
+                      {score > 0 ? `+${score}` : score}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Running totals */}
+        <div className="flex gap-2">
+          {s.config.players.map((name, i) => (
+            <div key={i} className="flex-1 bg-surface2 rounded-xl px-2 py-2 text-center">
+              <p className="text-muted text-[10px] truncate">{name}</p>
+              <p className="text-text font-bold tabular-nums text-sm">{s.totalScores[i]}</p>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="px-4 py-4">
