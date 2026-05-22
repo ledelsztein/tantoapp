@@ -5,6 +5,7 @@ import type { TrucoConfig } from '../../../types'
 import Button from '../../ui/Button'
 import PageHeader from '../../ui/PageHeader'
 import AdPlaceholder from '../../ui/AdPlaceholder'
+import { Analytics } from '../../../lib/analytics'
 
 export default function TrucoSetup() {
   const navigate = useNavigate()
@@ -19,6 +20,7 @@ export default function TrucoSetup() {
 
   const handleStart = () => {
     startGame(config)
+    Analytics.gameStart('truco', { players: config.modalidad, chicos: config.totalChicos })
     navigate('/truco/game')
   }
 

@@ -4,6 +4,7 @@ import { useBurakoStore } from '../../../store/burakoStore'
 import type { BurakoTeamEntry } from '../../../types'
 import GameNav from '../../ui/GameNav'
 import AdPlaceholder from '../../ui/AdPlaceholder'
+import { Analytics, activeTimer } from '../../../lib/analytics'
 
 // ─── Íconos inline ────────────────────────────────────────────────────────────
 
@@ -187,15 +188,25 @@ export default function BurakoGame() {
   const [showHistory, setShowHistory] = useState(false)
 
   useEffect(() => {
-    if (s.phase === 'end') navigate('/burako/end')
+    if (s.phase === 'end') {
+      Analytics.gameComplete('burako', activeTimer.getSeconds(), { manos: s.manos.length })
+      navigate('/burako/end')
+    }
   }, [s.phase, navigate])
+
+  useEffect(() => {
+    if (s.phase === 'playing' && s.startedAt && Date.now() - new Date(s.startedAt).getTime() > 15000) {
+      Analytics.gameResume('burako')
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <div className="flex flex-col min-h-dvh bg-bg">
       <GameNav
         center={`Mano ${s.manos.length + 1}`}
         onReiniciarResultados={() => s.resetGame()}
-        onNuevaPartida={() => { s.abandonGame(); navigate('/burako/setup') }}
+        onNuevaPartida={() => { Analytics.gameAbandon('burako', activeTimer.getSeconds()); s.abandonGame(); navigate('/burako/setup') }}
       />
 
       {/* Teams side by side */}

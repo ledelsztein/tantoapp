@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useDiezMilStore } from '../../../store/diezMilStore'
+import { Analytics } from '../../../lib/analytics'
 import Button from '../../ui/Button'
 import PageHeader from '../../ui/PageHeader'
 import AdPlaceholder from '../../ui/AdPlaceholder'
@@ -23,6 +24,7 @@ export default function DiezMilSetup() {
   const handleStart = () => {
     const entry = useCustom ? parseInt(customEntry) || 750 : minEntry
     startGame({ players, minEntry: entry, lastRound })
+    Analytics.gameStart('diez_mil', { players: players.length, min_entry: entry, last_round: lastRound })
     navigate('/diez-mil/game')
   }
 

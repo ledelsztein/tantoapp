@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useBurakoStore } from '../../../store/burakoStore'
+import { Analytics } from '../../../lib/analytics'
 import Button from '../../ui/Button'
 import PageHeader from '../../ui/PageHeader'
 import AdPlaceholder from '../../ui/AdPlaceholder'
@@ -18,6 +19,7 @@ export default function BurakoSetup() {
   const handleStart = () => {
     const obj = useCustom ? parseInt(customObj) || 3000 : objetivo
     startGame({ team1Name, team2Name, objetivo: obj })
+    Analytics.gameStart('burako', { objetivo: obj })
     navigate('/burako/game')
   }
 

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useGeneralaStore } from '../../../store/generalaStore'
+import { Analytics } from '../../../lib/analytics'
 import Button from '../../ui/Button'
 import PageHeader from '../../ui/PageHeader'
 import AdPlaceholder from '../../ui/AdPlaceholder'
@@ -17,6 +18,7 @@ export default function GeneralaSetup() {
 
   const handleStart = () => {
     startGame(players)
+    Analytics.gameStart('generala', { players: players.length })
     navigate('/generala/game')
   }
 

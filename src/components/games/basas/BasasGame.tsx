@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useBasasStore } from '../../../store/basasStore'
 import GameNav from '../../ui/GameNav'
 import AdPlaceholder from '../../ui/AdPlaceholder'
+import { Analytics, activeTimer } from '../../../lib/analytics'
 
 function calcForbiddenBid(bids: (number | null)[], bazasAvailable: number): number | null {
   const sum = bids.reduce<number>((acc, b) => acc + (b ?? 0), 0)
@@ -93,8 +94,21 @@ export default function BasasGame() {
   const [showScoreboard, setShowScoreboard] = useState(false)
 
   useEffect(() => {
-    if (s.phase === 'end') navigate('/basas/end')
+    if (s.phase === 'end') {
+      Analytics.gameComplete('basas', activeTimer.getSeconds(), { players: s.config.players.length, rounds: s.roundSequence.length })
+      navigate('/basas/end')
+    }
   }, [s.phase, navigate])
+
+  useEffect(() => {
+    if (s.phase === 'playing' && s.startedAt && Date.now() - new Date(s.startedAt).getTime() > 15000) {
+      Analytics.gameResume('basas')
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const handleScoreboardOpen = () => { Analytics.scoreboardOpen('basas'); setShowScoreboard(true) }
+  const handleAbandon = () => { Analytics.gameAbandon('basas', activeTimer.getSeconds()); s.abandonGame(); navigate('/basas/setup') }
 
   const round = s.rounds[s.currentRoundIndex]
   if (!round) return null
@@ -106,7 +120,7 @@ export default function BasasGame() {
   const dealerName = s.config.players[s.currentRoundDealerIndex]
 
   const ScoreboardBtn = (
-    <button onClick={() => setShowScoreboard(true)}
+    <button onClick={handleScoreboardOpen}
       className="p-1.5 rounded-lg bg-surface2 text-muted active:scale-95 transition-transform">
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
         <rect x="2" y="2" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.4"/>
@@ -138,7 +152,7 @@ export default function BasasGame() {
     return (
       <div className="flex flex-col min-h-dvh bg-bg">
         <GameNav onReiniciarResultados={() => s.resetGame()}
-          onNuevaPartida={() => { s.abandonGame(); navigate('/basas/setup') }}
+          onNuevaPartida={handleAbandon}
           extraContent={ScoreboardBtn}/>
         <ProgressBar />
 
@@ -203,7 +217,7 @@ export default function BasasGame() {
     return (
       <div className="flex flex-col min-h-dvh bg-bg">
         <GameNav onReiniciarResultados={() => s.resetGame()}
-          onNuevaPartida={() => { s.abandonGame(); navigate('/basas/setup') }}
+          onNuevaPartida={handleAbandon}
           extraContent={ScoreboardBtn}/>
         <ProgressBar />
 
@@ -260,7 +274,7 @@ export default function BasasGame() {
     <div className="flex flex-col min-h-dvh bg-bg">
       <GameNav center={`Ronda ${round.roundNumber}`}
         onReiniciarResultados={() => s.resetGame()}
-        onNuevaPartida={() => { s.abandonGame(); navigate('/basas/setup') }}
+        onNuevaPartida={handleAbandon}
         extraContent={ScoreboardBtn}/>
 
       <div className="flex-1 px-4 py-3 overflow-y-auto">
@@ -311,7 +325,7 @@ export default function BasasGame() {
       </div>
 
       <div className="px-4 py-4 flex flex-col gap-2">
-        <button onClick={s.confirmRoundSummary}
+        <button onClick={() => { Analytics.roundComplete('basas', round.roundNumber); s.confirmRoundSummary() }}
           className="w-full h-14 rounded-xl bg-accent text-bg font-semibold text-base active:scale-95 transition-transform">
           {s.currentRoundIndex + 1 >= s.roundSequence.length ? 'Finalizar partida' : 'Siguiente ronda'}
         </button>

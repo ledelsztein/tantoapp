@@ -4,6 +4,7 @@ import { useTrucoStore } from '../../../store/trucoStore'
 import TrucoCaja from './TrucoCaja'
 import GameNav from '../../ui/GameNav'
 import AdPlaceholder from '../../ui/AdPlaceholder'
+import { Analytics, activeTimer } from '../../../lib/analytics'
 
 function ChicoDots({ won, total }: { won: number; total: number }) {
   return (
@@ -94,8 +95,19 @@ export default function TrucoGame() {
   const picaMilestones = useRef({ shown5: false, shown25: false })
 
   useEffect(() => {
-    if (s.phase === 'end') navigate('/truco/end')
+    if (s.phase === 'end') {
+      Analytics.gameComplete('truco', activeTimer.getSeconds(), { players: s.config.modalidad, chicos: s.config.totalChicos })
+      navigate('/truco/end')
+    }
   }, [s.phase, navigate])
+
+  // game_resume: detecta si vuelve a una partida ya iniciada
+  useEffect(() => {
+    if (s.phase === 'playing' && s.startedAt && Date.now() - new Date(s.startedAt).getTime() > 15000) {
+      Analytics.gameResume('truco')
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Reset milestones on each new chico (chicoHistory length increases)
   useEffect(() => {
@@ -191,7 +203,7 @@ export default function TrucoGame() {
       <GameNav
         center={`Chico ${s.chicoHistory.length + 1} de ${s.config.totalChicos}`}
         onReiniciarResultados={() => s.resetGame()}
-        onNuevaPartida={() => { s.goToSetup(); navigate('/truco/setup') }}
+        onNuevaPartida={() => { Analytics.gameAbandon('truco', activeTimer.getSeconds()); s.goToSetup(); navigate('/truco/setup') }}
       />
 
       {/* Teams */}

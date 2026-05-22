@@ -6,6 +6,7 @@ import { useGeneralaStore } from '../store/generalaStore'
 import { useDiezMilStore } from '../store/diezMilStore'
 import { useBurakoStore } from '../store/burakoStore'
 import AdPlaceholder from '../components/ui/AdPlaceholder'
+import { Analytics } from '../lib/analytics'
 
 function TrucoIllustration() {
   return (
@@ -157,6 +158,7 @@ export default function Home() {
   }
 
   const handleShare = async () => {
+    Analytics.shareTap()
     const url = window.location.origin
     const text = `Anotá los puntos con TantoApp → ${url}`
     if (navigator.share) {
@@ -193,7 +195,7 @@ export default function Home() {
             </svg>
           </button>
           <button
-            onClick={toggle}
+            onClick={() => { Analytics.themeToggle(isLight ? 'dark' : 'light'); toggle() }}
             className="w-9 h-9 flex items-center justify-center rounded-xl bg-surface2 text-muted active:scale-95 transition-transform"
             aria-label={isLight ? 'Activar modo oscuro' : 'Activar modo claro'}
           >

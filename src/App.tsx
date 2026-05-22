@@ -1,4 +1,6 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { useEffect } from 'react'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { Analytics, activeTimer } from './lib/analytics'
 import Home from './pages/Home'
 import TrucoSetup from './components/games/truco/TrucoSetup'
 import TrucoGame from './components/games/truco/TrucoGame'
@@ -16,9 +18,19 @@ import BurakoSetup from './components/games/burako/BurakoSetup'
 import BurakoGame from './components/games/burako/BurakoGame'
 import BurakoEnd from './components/games/burako/BurakoEnd'
 
+function RouteTracker() {
+  const location = useLocation()
+  useEffect(() => {
+    Analytics.pageView(location.pathname)
+    activeTimer.reset()
+  }, [location.pathname])
+  return null
+}
+
 export default function App() {
   return (
     <BrowserRouter>
+      <RouteTracker />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/truco/setup" element={<TrucoSetup />} />

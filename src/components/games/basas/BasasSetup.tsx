@@ -17,6 +17,7 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useBasasStore } from '../../../store/basasStore'
+import { Analytics } from '../../../lib/analytics'
 import Button from '../../ui/Button'
 import PageHeader from '../../ui/PageHeader'
 import AdPlaceholder from '../../ui/AdPlaceholder'
@@ -151,6 +152,7 @@ export default function BasasSetup() {
 
   const handleStart = () => {
     startGame({ players, maxBazas, format, firstDealerIndex, direction })
+    Analytics.gameStart('basas', { players: players.length, max_bazas: maxBazas, format })
     navigate('/basas/game')
   }
 

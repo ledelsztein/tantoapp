@@ -4,6 +4,7 @@ import { useDiezMilStore } from '../../../store/diezMilStore'
 import Modal from '../../ui/Modal'
 import GameNav from '../../ui/GameNav'
 import AdPlaceholder from '../../ui/AdPlaceholder'
+import { Analytics, activeTimer } from '../../../lib/analytics'
 
 const SHORTCUTS = [
   { label: '+50', value: 50 },
@@ -20,8 +21,18 @@ export default function DiezMilGame() {
   const [addHistory, setAddHistory] = useState<number[]>([])
 
   useEffect(() => {
-    if (s.phase === 'end') navigate('/diez-mil/end')
+    if (s.phase === 'end') {
+      Analytics.gameComplete('diez_mil', activeTimer.getSeconds(), { players: s.players.length })
+      navigate('/diez-mil/end')
+    }
   }, [s.phase, navigate])
+
+  useEffect(() => {
+    if (s.phase === 'playing' && s.startedAt && Date.now() - new Date(s.startedAt).getTime() > 15000) {
+      Analytics.gameResume('diez_mil')
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Reset undo history when player changes
   useEffect(() => {
@@ -57,6 +68,7 @@ export default function DiezMilGame() {
   }
 
   const handleBurn = () => {
+    Analytics.burnTurn()
     s.burnTurn()
     setAddHistory([])
   }
@@ -65,7 +77,7 @@ export default function DiezMilGame() {
     <div className="flex flex-col min-h-dvh bg-bg">
       <GameNav
         onReiniciarResultados={() => { s.resetGame(); setAddHistory([]) }}
-        onNuevaPartida={() => { s.abandonGame(); navigate('/diez-mil/setup') }}
+        onNuevaPartida={() => { Analytics.gameAbandon('diez_mil', activeTimer.getSeconds()); s.abandonGame(); navigate('/diez-mil/setup') }}
       />
 
       {/* Last round banner */}

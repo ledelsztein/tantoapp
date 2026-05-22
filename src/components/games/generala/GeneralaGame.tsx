@@ -5,6 +5,7 @@ import type { GeneralaCategory } from '../../../types'
 import { GENERALA_CATEGORIES, GENERALA_CATEGORY_LABELS } from '../../../types'
 import GameNav from '../../ui/GameNav'
 import AdPlaceholder from '../../ui/AdPlaceholder'
+import { Analytics, activeTimer } from '../../../lib/analytics'
 
 const NUMERIC_CATS = new Set(['ones','twos','threes','fours','fives','sixes'])
 const DICE_VALUES: Record<string, number> = { ones:1, twos:2, threes:3, fours:4, fives:5, sixes:6 }
@@ -97,8 +98,18 @@ export default function GeneralaGame() {
   const [entryTarget, setEntryTarget] = useState<{ playerIndex: number; cat: GeneralaCategory } | null>(null)
 
   useEffect(() => {
-    if (s.phase === 'end') navigate('/generala/end')
+    if (s.phase === 'end') {
+      Analytics.gameComplete('generala', activeTimer.getSeconds(), { players: s.players.length })
+      navigate('/generala/end')
+    }
   }, [s.phase, navigate])
+
+  useEffect(() => {
+    if (s.phase === 'playing' && s.startedAt && Date.now() - new Date(s.startedAt).getTime() > 15000) {
+      Analytics.gameResume('generala')
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   if (s.players.length === 0) return null
 
@@ -116,6 +127,8 @@ export default function GeneralaGame() {
   }
 
   const handleCellTap = (pi: number, cat: GeneralaCategory) => {
+    const state = getCellState(pi, cat)
+    if (state !== 'available') Analytics.scoreCorrection('generala')
     setEntryTarget({ playerIndex: pi, cat })
   }
 
@@ -123,7 +136,7 @@ export default function GeneralaGame() {
     <div className="flex flex-col min-h-dvh bg-bg">
       <GameNav
         onReiniciarResultados={() => s.resetGame()}
-        onNuevaPartida={() => { s.abandonGame(); navigate('/generala/setup') }}
+        onNuevaPartida={() => { Analytics.gameAbandon('generala', activeTimer.getSeconds()); s.abandonGame(); navigate('/generala/setup') }}
       />
 
       {/* Scrollable table — columna de categorías sticky */}
