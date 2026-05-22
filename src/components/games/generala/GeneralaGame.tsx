@@ -116,8 +116,6 @@ export default function GeneralaGame() {
   }
 
   const handleCellTap = (pi: number, cat: GeneralaCategory) => {
-    const state = getCellState(pi, cat)
-    if (state === 'crossed') return // tachada = no editable
     setEntryTarget({ playerIndex: pi, cat })
   }
 
@@ -163,13 +161,12 @@ export default function GeneralaGame() {
                           <td key={pi} className="text-center px-1 py-0.5">
                             <button
                               onClick={() => handleCellTap(pi, cat)}
-                              disabled={state === 'crossed'}
-                              className={`w-full h-9 rounded-lg transition-all flex items-center justify-center ${
+                              className={`w-full h-9 rounded-lg transition-all flex items-center justify-center active:scale-95 ${
                                 state === 'crossed'
-                                  ? 'bg-danger/5 cursor-default'
+                                  ? 'bg-danger/5'
                                   : state === 'filled'
-                                  ? 'bg-surface2/50 active:scale-95'
-                                  : 'bg-surface2 active:scale-95'
+                                  ? 'bg-surface2/50'
+                                  : 'bg-surface2'
                               }`}
                             >
                               {state === 'crossed' && <span className="text-danger/50 text-sm">—</span>}
