@@ -3,12 +3,10 @@ import { persist } from 'zustand/middleware'
 import type { BasasGameState, BasasConfig, BasasRound } from '../types'
 
 function buildRoundSequence(maxBazas: number, format: 'ida' | 'ida_vuelta'): number[] {
-  const up: number[] = []
-  for (let i = 1; i <= maxBazas; i++) up.push(i)
-  const down: number[] = []
-  for (let i = maxBazas - 1; i >= 1; i--) down.push(i)
-  if (format === 'ida') return [...up, ...down]
-  return [...up, ...up]
+  const up = Array.from({ length: maxBazas }, (_, i) => i + 1)       // [1..N]
+  const down = Array.from({ length: maxBazas }, (_, i) => maxBazas - i) // [N..1]
+  if (format === 'ida') return [...up, ...down]   // 1..N, N..1 (N aparece 2 veces)
+  return [...up, ...up]                            // 1..N, 1..N
 }
 
 function getBiddingOrder(playerCount: number, dealerIndex: number, direction: 'cw' | 'ccw'): number[] {
