@@ -133,7 +133,6 @@ export default function BasasGame() {
   // ─── Bidding phase ───────────────────────────────────────────────────────────
 
   if (s.currentPhase === 'bidding') {
-    const bidsSubmittedCount = round.bids.filter(b => b !== null).length
     const forbidden = isLastTurn ? calcForbiddenBid(round.bids, bazas) : null
 
     return (
@@ -147,11 +146,10 @@ export default function BasasGame() {
           <div className="text-center">
             <p className="text-muted text-xs mb-1">Turno {s.currentPlayerTurn + 1} de {s.config.players.length}</p>
             <h2 className="text-text text-2xl font-bold">{playerName}</h2>
-            {bidsSubmittedCount > 0 && (
-              <p className="text-muted text-xs mt-1">
-                Suma de pujas: {round.bids.reduce<number>((a, b) => a + (b ?? 0), 0)}
-              </p>
-            )}
+            <p className="text-muted text-sm mt-1">¿Cuántas bazas puja?</p>
+            <p className="text-muted text-xs mt-0.5">
+              Suma de pujas: <span className="text-accent font-medium">{round.bids.reduce<number>((a, b) => a + (b ?? 0), 0)}</span>
+            </p>
           </div>
 
           <div className="grid grid-cols-8 gap-1.5">
@@ -312,10 +310,14 @@ export default function BasasGame() {
         </div>
       </div>
 
-      <div className="px-4 py-4">
+      <div className="px-4 py-4 flex flex-col gap-2">
         <button onClick={s.confirmRoundSummary}
           className="w-full h-14 rounded-xl bg-accent text-bg font-semibold text-base active:scale-95 transition-transform">
           {s.currentRoundIndex + 1 >= s.roundSequence.length ? 'Finalizar partida' : 'Siguiente ronda'}
+        </button>
+        <button onClick={() => setShowScoreboard(true)}
+          className="w-full h-12 rounded-xl border border-accent text-accent font-medium text-sm active:scale-95 transition-transform">
+          Ver tabla
         </button>
       </div>
       <AdPlaceholder />
