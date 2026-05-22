@@ -129,7 +129,7 @@ export default function TrucoGame() {
         <div className="flex items-center justify-between gap-2">
           <button
             onClick={() => setEditNameTeam(team)}
-            className="flex items-center gap-1.5 min-w-0"
+            className="flex items-center gap-1.5 min-w-0 overflow-hidden"
           >
             <span className="text-text font-bold text-base truncate">{name}</span>
             <svg width="13" height="13" viewBox="0 0 14 14" fill="none" className="text-muted shrink-0">
