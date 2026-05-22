@@ -71,7 +71,7 @@ function EditNameModal({ open, team, current, onClose, onConfirm }: EditNameModa
           value={val}
           onChange={(e) => setVal(e.target.value)}
           className="bg-surface2 text-text rounded-xl px-4 h-12 outline-none text-center text-lg"
-          maxLength={20}
+          maxLength={10}
           autoFocus
         />
         <div className="flex gap-3">
@@ -125,19 +125,19 @@ export default function TrucoGame() {
 
     return (
       <div className="flex-1 flex flex-col gap-3 bg-surface rounded-2xl p-4">
-        {/* Name row */}
-        <div className="flex items-center justify-between gap-2">
-          <button
-            onClick={() => setEditNameTeam(team)}
-            className="flex items-center gap-1.5 min-w-0 overflow-hidden"
-          >
-            <span className="text-text font-bold text-base truncate">{name}</span>
-            <svg width="13" height="13" viewBox="0 0 14 14" fill="none" className="text-muted shrink-0">
-              <path d="M10 2L12 4L5 11H3V9L10 2Z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
-          <ChicoDots won={data.chicosWon} total={s.config.totalChicos} />
-        </div>
+        {/* Name */}
+        <button
+          onClick={() => setEditNameTeam(team)}
+          className="flex items-center gap-1.5 w-full"
+        >
+          <span className="text-text font-bold text-base truncate">{name}</span>
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none" className="text-muted shrink-0">
+            <path d="M10 2L12 4L5 11H3V9L10 2Z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+
+        {/* Chico dots */}
+        <ChicoDots won={data.chicosWon} total={s.config.totalChicos} />
 
         {/* Points */}
         <span className="text-7xl font-bold text-text tabular-nums leading-none">{pts}</span>

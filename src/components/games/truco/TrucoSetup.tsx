@@ -39,7 +39,7 @@ export default function TrucoSetup() {
                   value={config[key]}
                   onChange={(e) => setConfig({ ...config, [key]: e.target.value })}
                   className="flex-1 bg-transparent text-text outline-none placeholder:text-muted"
-                  maxLength={20}
+                  maxLength={10}
                 />
               </div>
             ))}
