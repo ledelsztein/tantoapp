@@ -47,12 +47,12 @@ function EntryModal({ category, canFill, onClose, onConfirm }: EntryModalProps) 
           <>
             {isNumeric && (
               <div className="flex flex-col gap-2">
-                <p className="text-muted text-xs text-center">¿Cuántos dados mostraron {diceVal}?</p>
-                <div className="flex gap-2 justify-center">
+                <p className="text-muted text-xs text-center">¿Cuánto puntaje suma?</p>
+                <div className="flex gap-2">
                   {[0,1,2,3,4,5].map((n) => (
                     <button key={n} onClick={() => setNumericVal(n * diceVal)}
-                      className={`w-10 h-10 rounded-xl text-sm font-bold transition-colors ${numericVal === n * diceVal ? 'bg-accent text-bg' : 'bg-surface2 text-text'}`}>
-                      {n}
+                      className={`flex-1 h-11 rounded-xl text-sm font-bold transition-colors ${numericVal === n * diceVal ? 'bg-accent text-bg' : 'bg-surface2 text-text'}`}>
+                      {n * diceVal}
                     </button>
                   ))}
                 </div>
