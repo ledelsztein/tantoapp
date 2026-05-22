@@ -37,6 +37,7 @@ export default function DiezMilSetup() {
           <SortablePlayerList
             players={players}
             ids={ids}
+            maxNameLength={4}
             onPlayersChange={(p, i) => { setPlayers(p); setIds(i) }}
           />
         </section>

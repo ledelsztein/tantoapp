@@ -133,16 +133,18 @@ export default function GeneralaGame() {
         onNuevaPartida={() => { s.abandonGame(); navigate('/generala/setup') }}
       />
 
-      {/* Scrollable table */}
-      <div className="flex-1 overflow-auto px-4 pb-3">
+      {/* Scrollable table — columna de categorías sticky */}
+      <div className="flex-1 overflow-auto pb-3">
         <div className="overflow-x-auto">
-          <table className="w-full" style={{ minWidth: `${120 + s.players.length * 72}px` }}>
+          <table className="w-full border-collapse" style={{ minWidth: `${36 + s.players.length * 70}px` }}>
             <thead>
               <tr className="border-b border-border">
-                <th className="text-left text-muted text-xs py-2 pr-2 font-medium w-28">Cat.</th>
+                <th className="sticky left-0 z-10 bg-bg text-left text-muted text-xs py-1.5 pr-1 font-medium w-8 pl-4">
+                  Cat.
+                </th>
                 {s.players.map((p, i) => (
-                  <th key={i} className="text-center text-text text-xs py-2 px-1 font-semibold" style={{ minWidth: 68 }}>
-                    <div>{p.name}</div>
+                  <th key={i} className="text-center text-text text-xs py-1.5 px-1 font-semibold" style={{ minWidth: 64 }}>
+                    <div className="truncate">{p.name}</div>
                     <div className="text-accent font-bold text-sm tabular-nums">{p.totalScore}</div>
                   </th>
                 ))}
@@ -154,18 +156,20 @@ export default function GeneralaGame() {
 
                 return (
                   <>
-                    <tr key={cat} className="border-b border-border/30">
-                      <td className="text-muted text-xs py-2.5 pr-2 font-medium">{GENERALA_CATEGORY_LABELS[cat]}</td>
+                    <tr key={cat} className="border-b border-border/20">
+                      <td className="sticky left-0 z-10 bg-bg text-muted text-xs py-1 pr-1 font-semibold pl-4 w-8">
+                        {GENERALA_CATEGORY_LABELS[cat]}
+                      </td>
                       {s.players.map((_, pi) => {
                         const state = getCellState(pi, cat)
                         const entry = s.players[pi]?.categories[cat]
 
                         return (
-                          <td key={pi} className="text-center px-1 py-1">
+                          <td key={pi} className="text-center px-1 py-0.5">
                             <button
                               onClick={() => handleCellTap(pi, cat)}
                               disabled={state === 'crossed'}
-                              className={`w-full min-h-[40px] rounded-lg transition-all flex items-center justify-center ${
+                              className={`w-full h-9 rounded-lg transition-all flex items-center justify-center ${
                                 state === 'crossed'
                                   ? 'bg-danger/5 cursor-default'
                                   : state === 'filled'
@@ -173,15 +177,15 @@ export default function GeneralaGame() {
                                   : 'bg-surface2 active:scale-95'
                               }`}
                             >
-                              {state === 'crossed' && <span className="text-danger/50 text-sm font-medium">—</span>}
+                              {state === 'crossed' && <span className="text-danger/50 text-sm">—</span>}
                               {state === 'filled' && entry && (
-                                <div className="flex flex-col items-center gap-0.5">
-                                  <span className="text-text text-sm font-bold tabular-nums">{entry.score}</span>
-                                  {entry.served && <span className="text-success text-[9px]">✦</span>}
+                                <div className="flex flex-col items-center gap-0">
+                                  <span className="text-text text-sm font-bold tabular-nums leading-tight">{entry.score}</span>
+                                  {entry.served && <span className="text-success text-[8px] leading-none">✦</span>}
                                 </div>
                               )}
                               {state === 'available' && (
-                                <span className="text-border text-lg">·</span>
+                                <span className="text-border/60 text-base">·</span>
                               )}
                             </button>
                           </td>
@@ -190,8 +194,8 @@ export default function GeneralaGame() {
                     </tr>
                     {isBreak && (
                       <tr key={`${cat}-divider`}>
-                        <td colSpan={s.players.length + 1} className="py-0">
-                          <div className="h-px bg-border/60 my-1"/>
+                        <td colSpan={s.players.length + 1} className="py-0 sticky left-0">
+                          <div className="h-px bg-border/40 my-0.5"/>
                         </td>
                       </tr>
                     )}
@@ -201,9 +205,9 @@ export default function GeneralaGame() {
             </tbody>
             <tfoot>
               <tr className="bg-surface2 border-t border-border">
-                <td className="text-muted text-xs py-2.5 pr-2 font-semibold">Total</td>
+                <td className="sticky left-0 z-10 bg-surface2 text-muted text-xs py-2 font-semibold pl-4">Total</td>
                 {s.players.map((p, i) => (
-                  <td key={i} className="text-center px-1 py-2.5">
+                  <td key={i} className="text-center px-1 py-2">
                     <span className="text-text font-bold text-sm tabular-nums">{p.totalScore}</span>
                   </td>
                 ))}

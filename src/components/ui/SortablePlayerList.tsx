@@ -19,11 +19,12 @@ interface SortableItemProps {
   id: string
   name: string
   canRemove: boolean
+  maxNameLength: number
   onChangeName: (v: string) => void
   onRemove: () => void
 }
 
-function SortableItem({ id, name, canRemove, onChangeName, onRemove }: SortableItemProps) {
+function SortableItem({ id, name, canRemove, maxNameLength, onChangeName, onRemove }: SortableItemProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
 
   return (
@@ -48,7 +49,7 @@ function SortableItem({ id, name, canRemove, onChangeName, onRemove }: SortableI
         value={name}
         onChange={(e) => onChangeName(e.target.value)}
         className="flex-1 bg-transparent text-text outline-none text-sm"
-        maxLength={12}
+        maxLength={maxNameLength}
       />
 
       {canRemove && (
@@ -68,6 +69,7 @@ interface SortablePlayerListProps {
   ids: string[]
   maxPlayers?: number
   minPlayers?: number
+  maxNameLength?: number
   onPlayersChange: (players: string[], ids: string[]) => void
 }
 
@@ -76,6 +78,7 @@ export default function SortablePlayerList({
   ids,
   maxPlayers = 8,
   minPlayers = 2,
+  maxNameLength = 12,
   onPlayersChange,
 }: SortablePlayerListProps) {
   const sensors = useSensors(
@@ -118,6 +121,7 @@ export default function SortablePlayerList({
               id={ids[i]}
               name={name}
               canRemove={players.length > minPlayers}
+              maxNameLength={maxNameLength}
               onChangeName={(v) => updateName(i, v)}
               onRemove={() => removePlayer(i)}
             />

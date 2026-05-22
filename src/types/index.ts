@@ -86,11 +86,11 @@ export const GENERALA_CATEGORY_LABELS: Record<GeneralaCategory, string> = {
   fours: '4',
   fives: '5',
   sixes: '6',
-  escalera: 'Escalera',
-  full: 'Full',
-  poker: 'Póker',
-  generala: 'Generala',
-  generala_doble: 'Gen. Doble',
+  escalera: 'E',
+  full: 'F',
+  poker: 'P',
+  generala: 'G',
+  generala_doble: 'DG',
 }
 
 export const GENERALA_BASE_SCORES: Record<GeneralaCategory, number> = {
