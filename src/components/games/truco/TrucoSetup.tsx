@@ -7,6 +7,19 @@ import PageHeader from '../../ui/PageHeader'
 import AdPlaceholder from '../../ui/AdPlaceholder'
 import { Analytics } from '../../../lib/analytics'
 
+const MODOS = [
+  {
+    value: 2 as const,
+    label: 'Al mejor de 3',
+    desc: 'Gana el primero en ganar 2 chicos',
+  },
+  {
+    value: 3 as const,
+    label: 'A 3 chicos',
+    desc: 'Gana el primero en llegar a 3 chicos',
+  },
+]
+
 export default function TrucoSetup() {
   const navigate = useNavigate()
   const startGame = useTrucoStore((s) => s.startGame)
@@ -14,7 +27,7 @@ export default function TrucoSetup() {
   const [config, setConfig] = useState<TrucoConfig>({
     team1Name: 'Nosotros',
     team2Name: 'Ellos',
-    totalChicos: 3,
+    totalChicos: 2,
     modalidad: 4,
   })
 
@@ -40,7 +53,7 @@ export default function TrucoSetup() {
                   type="text"
                   value={config[key]}
                   onChange={(e) => setConfig({ ...config, [key]: e.target.value })}
-                  className="flex-1 bg-transparent text-text outline-none placeholder:text-muted"
+                  className="flex-1 bg-transparent text-text outline-none"
                   maxLength={10}
                 />
               </div>
@@ -48,38 +61,39 @@ export default function TrucoSetup() {
           </div>
         </section>
 
-        {/* Chicos */}
+        {/* Modo de partido */}
         <section className="flex flex-col gap-3">
-          <p className="text-muted text-xs font-medium uppercase tracking-widest">Cantidad de chicos</p>
-          <div className="flex gap-2">
-            {([1, 2, 3, 4, 5] as const).map((n) => (
+          <p className="text-muted text-xs font-medium uppercase tracking-widest">Modalidad de partido</p>
+          <div className="flex flex-col gap-2">
+            {MODOS.map((m) => (
               <button
-                key={n}
-                onClick={() => setConfig({ ...config, totalChicos: n })}
-                className={`flex-1 h-12 rounded-xl text-base font-semibold transition-colors ${
-                  config.totalChicos === n
-                    ? 'bg-accent text-bg'
-                    : 'bg-surface2 text-muted'
+                key={m.value}
+                onClick={() => setConfig({ ...config, totalChicos: m.value })}
+                className={`flex flex-col items-start px-4 py-3.5 rounded-xl border transition-colors text-left ${
+                  config.totalChicos === m.value
+                    ? 'bg-accent/10 border-accent/50'
+                    : 'bg-surface2 border-transparent'
                 }`}
               >
-                {n}
+                <span className={`font-semibold text-sm ${config.totalChicos === m.value ? 'text-accent' : 'text-text'}`}>
+                  {m.label}
+                </span>
+                <span className="text-muted text-xs mt-0.5">{m.desc}</span>
               </button>
             ))}
           </div>
         </section>
 
-        {/* Modalidad */}
+        {/* Modalidad de jugadores */}
         <section className="flex flex-col gap-3">
-          <p className="text-muted text-xs font-medium uppercase tracking-widest">Modalidad</p>
+          <p className="text-muted text-xs font-medium uppercase tracking-widest">Jugadores</p>
           <div className="flex gap-2">
             {([2, 4, 6] as const).map((n) => (
               <button
                 key={n}
                 onClick={() => setConfig({ ...config, modalidad: n })}
                 className={`flex-1 h-12 rounded-xl text-base font-semibold transition-colors ${
-                  config.modalidad === n
-                    ? 'bg-accent text-bg'
-                    : 'bg-surface2 text-muted'
+                  config.modalidad === n ? 'bg-accent text-bg' : 'bg-surface2 text-muted'
                 }`}
               >
                 {n}J
@@ -90,16 +104,10 @@ export default function TrucoSetup() {
       </div>
 
       <div className="px-4 py-4">
-        <Button
-          variant="primary"
-          size="lg"
-          className="w-full"
-          onClick={handleStart}
-        >
+        <Button variant="primary" size="lg" className="w-full" onClick={handleStart}>
           Empezar partida
         </Button>
       </div>
-
       <AdPlaceholder />
     </div>
   )

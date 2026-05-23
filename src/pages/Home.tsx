@@ -160,9 +160,8 @@ export default function Home() {
   const handleShare = async () => {
     Analytics.shareTap()
     const url = window.location.origin
-    const text = `Anotá los puntos con TantoApp → ${url}`
     if (navigator.share) {
-      try { await navigator.share({ title: 'TantoApp', text, url }) } catch {}
+      try { await navigator.share({ title: 'TantoApp', text: 'Anotá los puntos de tus juegos favoritos', url }) } catch {}
     } else {
       await navigator.clipboard.writeText(url)
     }

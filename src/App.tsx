@@ -1,6 +1,12 @@
 import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { Analytics, activeTimer } from './lib/analytics'
+import { useWakeLock } from './lib/useWakeLock'
+import { useTrucoStore } from './store/trucoStore'
+import { useBasasStore } from './store/basasStore'
+import { useGeneralaStore } from './store/generalaStore'
+import { useDiezMilStore } from './store/diezMilStore'
+import { useBurakoStore } from './store/burakoStore'
 import Home from './pages/Home'
 import TrucoSetup from './components/games/truco/TrucoSetup'
 import TrucoGame from './components/games/truco/TrucoGame'
@@ -18,6 +24,16 @@ import BurakoSetup from './components/games/burako/BurakoSetup'
 import BurakoGame from './components/games/burako/BurakoGame'
 import BurakoEnd from './components/games/burako/BurakoEnd'
 
+function WakeLockManager() {
+  const t = useTrucoStore(s => s.phase)
+  const b = useBasasStore(s => s.phase)
+  const g = useGeneralaStore(s => s.phase)
+  const d = useDiezMilStore(s => s.phase)
+  const bk = useBurakoStore(s => s.phase)
+  useWakeLock([t, b, g, d, bk].some(p => p === 'playing'))
+  return null
+}
+
 function RouteTracker() {
   const location = useLocation()
   useEffect(() => {
@@ -31,6 +47,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <RouteTracker />
+      <WakeLockManager />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/truco/setup" element={<TrucoSetup />} />
