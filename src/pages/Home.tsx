@@ -225,41 +225,26 @@ export default function Home() {
         <p className="text-muted text-xs font-medium uppercase tracking-widest mb-3 px-1">Juegos</p>
         <div className="grid grid-cols-2 gap-3">
           {GAMES.map((game) => {
-            const Illustration = game.illustration
             const isActive = game.available && gamePhases[game.id] === 'playing'
 
             if (!game.available) {
               return (
-                <div
-                  key={game.id}
-                  className="relative bg-surface rounded-2xl p-4 flex flex-col gap-3 opacity-40 border border-border"
-                >
-                  <div className="h-16 text-muted">
-                    <Illustration />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-text font-semibold text-sm">{game.label}</span>
-                    <span className="text-[10px] text-muted bg-surface2 px-2 py-0.5 rounded-full">Pronto</span>
-                  </div>
+                <div key={game.id}
+                  className="bg-surface rounded-2xl border border-border flex flex-col items-center justify-center gap-2 opacity-40 h-28">
+                  <span className="text-text font-bold text-xl">{game.label}</span>
+                  <span className="text-[10px] text-muted bg-surface2 px-2 py-0.5 rounded-full">Pronto</span>
                 </div>
               )
             }
 
             return (
-              <button
-                key={game.id}
+              <button key={game.id}
                 onClick={() => navigate(isActive ? `${game.path}/game` : `${game.path}/setup`)}
-                className="relative bg-surface border border-border rounded-2xl p-4 flex flex-col gap-3 text-left active:scale-[0.97] transition-transform"
-              >
-                <div className="h-16 text-accent">
-                  <Illustration />
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-text font-semibold text-sm">{game.label}</span>
-                  {isActive && (
-                    <span className="w-3 h-3 rounded-full bg-success shrink-0" />
-                  )}
-                </div>
+                className="relative bg-surface border border-border rounded-2xl flex items-center justify-center h-28 active:scale-[0.97] transition-transform">
+                <span className="text-text font-bold text-2xl">{game.label}</span>
+                {isActive && (
+                  <span className="absolute top-3 right-3 w-3 h-3 rounded-full bg-success" />
+                )}
               </button>
             )
           })}
