@@ -94,6 +94,7 @@ export default function BasasGame() {
   const navigate = useNavigate()
   const s = useBasasStore()
   const [showScoreboard, setShowScoreboard] = useState(false)
+  const [showAllWinWarning, setShowAllWinWarning] = useState(false)
 
   useEffect(() => {
     if (s.phase === 'end') {
@@ -108,6 +109,18 @@ export default function BasasGame() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Detecta cuando se entra al summary con todos sumando
+  useEffect(() => {
+    if (s.currentPhase === 'summary') {
+      const round = s.rounds[s.currentRoundIndex]
+      if (round && round.scores.every(sc => sc !== null && (sc as number) > 0)) {
+        setShowAllWinWarning(true)
+      }
+    } else {
+      setShowAllWinWarning(false)
+    }
+  }, [s.currentPhase, s.currentRoundIndex])
 
   const handleScoreboardOpen = () => { Analytics.scoreboardOpen('basas'); setShowScoreboard(true) }
   const handleAbandon = () => { Analytics.gameAbandon('basas', activeTimer.getSeconds()); s.abandonGame(); navigate('/basas/setup') }
@@ -274,10 +287,6 @@ export default function BasasGame() {
 
   // Totales incluyendo la ronda actual (aún no confirmada)
   const pendingTotals = s.totalScores.map((t, i) => t + (round.scores[i] ?? 0))
-
-  // Warning: todos suman (viola la regla de las bazas)
-  const allPositive = round.scores.every(sc => sc !== null && (sc as number) > 0)
-  const [showAllWinWarning, setShowAllWinWarning] = useState(allPositive)
 
   return (
     <div className="flex flex-col min-h-dvh bg-bg">
