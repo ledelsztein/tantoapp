@@ -50,6 +50,7 @@ interface BasasStore extends BasasGameState {
   submitBid: (bid: number) => void
   submitResult: (result: number) => void
   confirmRoundSummary: () => void
+  resetCurrentRoundResults: () => void
   resetGame: () => void
   abandonGame: () => void
 }
@@ -141,6 +142,16 @@ export const useBasasStore = create<BasasStore>()(
             updatedAt: new Date().toISOString(),
           })
         }
+      },
+
+      resetCurrentRoundResults: () => {
+        const s = get()
+        const rounds = [...s.rounds]
+        const round = { ...rounds[s.currentRoundIndex] }
+        round.results = Array(s.config.players.length).fill(null)
+        round.scores = Array(s.config.players.length).fill(null)
+        rounds[s.currentRoundIndex] = round
+        set({ rounds, currentPhase: 'results', currentPlayerTurn: 0, updatedAt: new Date().toISOString() })
       },
 
       resetGame: () => {

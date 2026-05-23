@@ -13,8 +13,10 @@ function calcForbiddenBid(bids: (number | null)[], bazasAvailable: number): numb
 
 // ─── Scoreboard completo (todas las rondas desde el inicio) ────────────────────
 
-function FullScoreboard({ onClose }: { onClose?: () => void }) {
+// overrideTotals: muestra totales pendientes durante el summary (antes de confirmar)
+function FullScoreboard({ onClose, overrideTotals }: { onClose?: () => void; overrideTotals?: number[] }) {
   const s = useBasasStore()
+  const displayTotals = overrideTotals ?? s.totalScores
   return (
     <div className={onClose ? 'fixed inset-0 z-50 flex flex-col bg-bg' : 'flex flex-col'}>
       {onClose && (
@@ -72,7 +74,7 @@ function FullScoreboard({ onClose }: { onClose?: () => void }) {
             <tfoot>
               <tr className="bg-surface2">
                 <td className="text-muted text-xs py-2 pr-3 font-semibold">Total</td>
-                {s.totalScores.map((t, i) => (
+                {displayTotals.map((t, i) => (
                   <td key={i} className="text-center py-2 px-1">
                     <span className="text-text font-bold text-sm tabular-nums">{t}</span>
                   </td>
@@ -268,7 +270,14 @@ export default function BasasGame() {
     )
   }
 
-  // ─── Summary phase — resumen compacto, sin tabla completa ───────────────────
+  // ─── Summary phase ────────────────────────────────────────────────────────────
+
+  // Totales incluyendo la ronda actual (aún no confirmada)
+  const pendingTotals = s.totalScores.map((t, i) => t + (round.scores[i] ?? 0))
+
+  // Warning: todos suman (viola la regla de las bazas)
+  const allPositive = round.scores.every(sc => sc !== null && (sc as number) > 0)
+  const [showAllWinWarning, setShowAllWinWarning] = useState(allPositive)
 
   return (
     <div className="flex flex-col min-h-dvh bg-bg">
@@ -313,12 +322,12 @@ export default function BasasGame() {
           })}
         </div>
 
-        {/* Running totals */}
+        {/* Totales pendientes (ya incluyen esta ronda) */}
         <div className="flex gap-2">
           {s.config.players.map((name, i) => (
             <div key={i} className="flex-1 bg-surface2 rounded-xl px-2 py-2 text-center">
               <p className="text-muted text-[10px] truncate">{name}</p>
-              <p className="text-text font-bold tabular-nums text-sm">{s.totalScores[i]}</p>
+              <p className="text-text font-bold tabular-nums text-sm">{pendingTotals[i]}</p>
             </div>
           ))}
         </div>
@@ -329,13 +338,40 @@ export default function BasasGame() {
           className="w-full h-14 rounded-xl bg-accent text-bg font-semibold text-base active:scale-95 transition-transform">
           {s.currentRoundIndex + 1 >= s.roundSequence.length ? 'Finalizar partida' : 'Siguiente ronda'}
         </button>
-        <button onClick={() => setShowScoreboard(true)}
+        <button onClick={handleScoreboardOpen}
           className="w-full h-12 rounded-xl border border-accent text-accent font-medium text-sm active:scale-95 transition-transform">
           Ver tabla
         </button>
       </div>
       <AdPlaceholder />
-      {showScoreboard && <FullScoreboard onClose={() => setShowScoreboard(false)} />}
+      {showScoreboard && <FullScoreboard onClose={() => setShowScoreboard(false)} overrideTotals={pendingTotals} />}
+
+      {/* Warning: todos los jugadores sumaron */}
+      {showAllWinWarning && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center p-4 pb-8 bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-sm bg-surface rounded-2xl p-5 flex flex-col gap-4 shadow-2xl">
+            <div className="flex flex-col items-center gap-1 text-center">
+              <span className="text-2xl">⚠️</span>
+              <h2 className="text-text font-bold text-base">Todos suman</h2>
+              <p className="text-muted text-sm">
+                La regla de bazas no permite que todos acierten. Revisá los resultados.
+              </p>
+            </div>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={() => { setShowAllWinWarning(false); s.resetCurrentRoundResults() }}
+                className="w-full h-12 rounded-xl bg-accent text-bg font-semibold active:scale-95 transition-transform">
+                Revisar resultados
+              </button>
+              <button
+                onClick={() => setShowAllWinWarning(false)}
+                className="w-full h-11 rounded-xl border border-border text-muted text-sm active:scale-95 transition-transform">
+                Continuar igual
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
