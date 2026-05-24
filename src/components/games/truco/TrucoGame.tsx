@@ -110,7 +110,7 @@ export default function TrucoGame() {
           <button
             onClick={() => pts > 0 && s.setPoints(team, pts - 1)}
             disabled={pts === 0}
-            className="w-9 h-9 rounded-xl bg-surface2 text-text text-xl font-light active:scale-95 transition-transform disabled:opacity-25 shrink-0"
+            className="w-6 h-6 rounded-md border border-border text-muted text-sm leading-none active:scale-95 transition-transform disabled:opacity-20 shrink-0 flex items-center justify-center"
           >
             −
           </button>
@@ -119,7 +119,7 @@ export default function TrucoGame() {
           </span>
           <button
             onClick={() => s.addPoints(team, 1)}
-            className="w-9 h-9 rounded-xl bg-surface2 text-text text-xl font-light active:scale-95 transition-transform shrink-0"
+            className="w-6 h-6 rounded-md border border-border text-muted text-sm leading-none active:scale-95 transition-transform shrink-0 flex items-center justify-center"
           >
             +
           </button>
