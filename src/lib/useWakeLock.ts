@@ -1,41 +1,51 @@
 import { useEffect, useRef } from 'react'
 
 export function useWakeLock(active: boolean) {
-  const lockRef = useRef<WakeLockSentinel | null>(null)
+  const lockRef = useRef<any>(null)
 
   useEffect(() => {
-    if (!('wakeLock' in navigator)) return
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const nav = navigator as any
+    if (!nav?.wakeLock) return
 
     const acquire = async () => {
+      if (document.hidden || lockRef.current) return
       try {
-        if (!document.hidden && !lockRef.current) {
-          lockRef.current = await (navigator as unknown as { wakeLock: { request: (type: string) => Promise<WakeLockSentinel> } }).wakeLock.request('screen')
-          lockRef.current.addEventListener('release', () => { lockRef.current = null })
-        }
+        lockRef.current = await nav.wakeLock.request('screen')
+        lockRef.current.addEventListener('release', () => {
+          lockRef.current = null
+        })
       } catch {}
     }
 
     const release = async () => {
-      if (lockRef.current) {
-        await lockRef.current.release()
-        lockRef.current = null
-      }
+      const lock = lockRef.current
+      if (!lock) return
+      lockRef.current = null
+      try { await lock.release() } catch {}
     }
 
-    if (active) {
-      acquire()
-    } else {
+    if (!active) {
       release()
+      return
     }
 
-    // Re-adquirir tras volver del background (requirido por la spec)
-    const handleVisibility = () => {
-      if (!document.hidden && active) acquire()
-    }
-    document.addEventListener('visibilitychange', handleVisibility)
+    acquire()
+
+    // Re-adquirir cuando vuelve al foco (iOS puede liberar el lock al cambiar de app)
+    const handleFocus = () => { if (!document.hidden) acquire() }
+    document.addEventListener('visibilitychange', handleFocus)
+    window.addEventListener('focus', handleFocus)
+
+    // Recheck periódico — iOS a veces libera el lock sin notificar
+    const interval = setInterval(() => {
+      if (!document.hidden && !lockRef.current) acquire()
+    }, 10000)
 
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibility)
+      document.removeEventListener('visibilitychange', handleFocus)
+      window.removeEventListener('focus', handleFocus)
+      clearInterval(interval)
       release()
     }
   }, [active])

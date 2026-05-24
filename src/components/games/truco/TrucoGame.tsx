@@ -114,7 +114,7 @@ export default function TrucoGame() {
           >
             −
           </button>
-          <span className="flex-1 text-center text-7xl font-bold text-text tabular-nums leading-none">
+          <span className="flex-1 text-center text-6xl font-bold text-text tabular-nums leading-none">
             {pts}
           </span>
           <button
