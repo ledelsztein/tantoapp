@@ -114,7 +114,7 @@ export default function TrucoGame() {
           >
             −
           </button>
-          <span className="flex-1 min-w-0 text-center text-5xl font-bold text-text tabular-nums leading-none">
+          <span className="w-14 shrink-0 text-center text-5xl font-bold text-text tabular-nums leading-none">
             {pts}
           </span>
           <button
@@ -136,11 +136,11 @@ export default function TrucoGame() {
         <div className="flex flex-col gap-2">
           <div>
             <p className="text-muted text-[10px] uppercase tracking-widest mb-1.5">Malas</p>
-            <TrucoCaja points={pts} section="malas" />
+            <TrucoCaja points={pts} section="malas" boxSize={34} />
           </div>
           <div>
             <p className="text-muted text-[10px] uppercase tracking-widest mb-1.5">Buenas</p>
-            <TrucoCaja points={pts} section="buenas" />
+            <TrucoCaja points={pts} section="buenas" boxSize={34} />
           </div>
         </div>
       </div>

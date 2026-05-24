@@ -2,18 +2,23 @@ import { useEffect, useRef } from 'react'
 
 export function useWakeLock(active: boolean) {
   const lockRef = useRef<any>(null)
+  const activeRef = useRef(active)
+  activeRef.current = active
 
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const nav = navigator as any
     if (!nav?.wakeLock) return
 
     const acquire = async () => {
-      if (document.hidden || lockRef.current) return
+      if (document.hidden || lockRef.current || !activeRef.current) return
       try {
         lockRef.current = await nav.wakeLock.request('screen')
+        // Cuando iOS libera el lock (batería, app switch, etc.) lo re-adquirimos
         lockRef.current.addEventListener('release', () => {
           lockRef.current = null
+          if (activeRef.current && !document.hidden) {
+            setTimeout(acquire, 500)
+          }
         })
       } catch {}
     }
@@ -30,21 +35,27 @@ export function useWakeLock(active: boolean) {
       return
     }
 
+    // Intento inicial
     acquire()
 
-    // Re-adquirir cuando vuelve al foco (iOS puede liberar el lock al cambiar de app)
+    // Recuperar cuando la app vuelve al frente
     const handleFocus = () => { if (!document.hidden) acquire() }
     document.addEventListener('visibilitychange', handleFocus)
     window.addEventListener('focus', handleFocus)
 
-    // Recheck periódico — iOS a veces libera el lock sin notificar
+    // iOS necesita gesto del usuario — cada tap es una oportunidad
+    const handleTap = () => { if (!lockRef.current) acquire() }
+    document.addEventListener('touchend', handleTap, { passive: true })
+
+    // Recheck cada 5s por si iOS lo liberó silenciosamente
     const interval = setInterval(() => {
       if (!document.hidden && !lockRef.current) acquire()
-    }, 10000)
+    }, 5000)
 
     return () => {
       document.removeEventListener('visibilitychange', handleFocus)
       window.removeEventListener('focus', handleFocus)
+      document.removeEventListener('touchend', handleTap)
       clearInterval(interval)
       release()
     }
