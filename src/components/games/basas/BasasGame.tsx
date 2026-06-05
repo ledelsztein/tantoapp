@@ -181,6 +181,7 @@ export default function BasasGame() {
   const s = useBasasStore()
   const [showScoreboard, setShowScoreboard] = useState(false)
   const [showAllWinWarning, setShowAllWinWarning] = useState(false)
+  const [editBidPlayer, setEditBidPlayer] = useState<number | null>(null) // playerIndex siendo editado
 
   useEffect(() => {
     if (s.phase === 'end') {
@@ -261,6 +262,12 @@ export default function BasasGame() {
           <div className="text-center">
             <p className="text-muted text-xs mb-1">Turno {s.currentPlayerTurn + 1} de {s.config.players.length}</p>
             <h2 className="text-text text-2xl font-bold">{playerName}</h2>
+            {(() => {
+              const last3 = s.rounds.slice(0, s.currentRoundIndex).map(r => r.bids[currentPlayerIndex]).filter(b => b !== null).slice(-3) as number[]
+              return last3.length > 0 ? (
+                <p className="text-muted text-xs mt-0.5">Últimas: <span className="tabular-nums">{last3.join(' · ')}</span></p>
+              ) : null
+            })()}
             <p className="text-muted text-sm mt-1">¿Cuántas bazas puja?</p>
             <p className="text-muted text-xs mt-0.5">
               Suma de pujas: <span className="text-accent font-medium">{round.bids.reduce<number>((a, b) => a + (b ?? 0), 0)}</span>
@@ -310,7 +317,14 @@ export default function BasasGame() {
                     )}
                   </div>
                   <div className="flex items-center gap-2">
-                    {round.bids[pi] !== null && <span className="text-accent text-sm font-medium">{round.bids[pi]}</span>}
+                    {round.bids[pi] !== null && (
+                      <button
+                        onClick={() => setEditBidPlayer(pi)}
+                        className="text-accent text-sm font-medium active:opacity-60 underline decoration-dotted"
+                      >
+                        {round.bids[pi]}
+                      </button>
+                    )}
                     {turn === s.currentPlayerTurn && round.bids[pi] === null && <span className="text-accent text-xs">← ahora</span>}
                   </div>
                 </div>
@@ -320,6 +334,33 @@ export default function BasasGame() {
         </div>
         <AdPlaceholder />
         {showScoreboard && <FullScoreboard onClose={() => setShowScoreboard(false)} />}
+
+        {/* Modal editar puja ya enviada */}
+        {editBidPlayer !== null && (
+          <div className="fixed inset-0 z-50 flex items-end justify-center p-4 pb-8 bg-black/60 backdrop-blur-sm">
+            <div className="w-full max-w-sm bg-surface rounded-2xl p-5 flex flex-col gap-4 shadow-2xl">
+              <div className="flex items-center justify-between">
+                <h2 className="text-text font-semibold">
+                  Corregir puja de {s.config.players[editBidPlayer]}
+                </h2>
+                <button onClick={() => setEditBidPlayer(null)} className="text-muted active:opacity-60">
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                    <line x1="4" y1="4" x2="14" y2="14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                    <line x1="14" y1="4" x2="4" y2="14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                  </svg>
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {Array.from({ length: bazas + 1 }, (_, i) => i).map(n => (
+                  <button key={n} onClick={() => { s.editCurrentBid(editBidPlayer, n); setEditBidPlayer(null) }}
+                    className={`w-11 h-10 rounded-xl text-base font-bold transition-colors active:scale-95 ${round.bids[editBidPlayer] === n ? 'bg-accent text-bg' : 'bg-surface2 text-text'}`}>
+                    {n}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     )
   }
