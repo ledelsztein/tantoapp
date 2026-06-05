@@ -40,6 +40,11 @@ export interface BasasConfig {
   format: 'ida' | 'ida_vuelta'
   firstDealerIndex: number
   direction: 'cw' | 'ccw'
+  // Scoring
+  scoreBase: number        // bonus fijo por acertar (default 10)
+  scorePerBid: number      // puntos por baza pujada acertada (default 3)
+  penaltyEnabled: boolean  // restar por error (default true)
+  penaltyPerBaza: number   // puntos restados por baza de diferencia (default 3)
 }
 
 export interface BasasRound {

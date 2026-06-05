@@ -114,6 +114,10 @@ export default function BasasSetup() {
   const [format, setFormat] = useState<'ida' | 'ida_vuelta'>('ida')
   const [firstDealerIndex, setFirstDealerIndex] = useState(0)
   const [direction, setDirection] = useState<'cw' | 'ccw'>('cw')
+  const [scoreBase, setScoreBase] = useState(10)
+  const [scorePerBid, setScorePerBid] = useState(3)
+  const [penaltyEnabled, setPenaltyEnabled] = useState(true)
+  const [penaltyPerBaza, setPenaltyPerBaza] = useState(3)
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -151,7 +155,7 @@ export default function BasasSetup() {
   const totalRounds = format === 'ida' ? maxBazas * 2 : maxBazas * 2
 
   const handleStart = () => {
-    startGame({ players, maxBazas, format, firstDealerIndex, direction })
+    startGame({ players, maxBazas, format, firstDealerIndex, direction, scoreBase, scorePerBid, penaltyEnabled, penaltyPerBaza })
     Analytics.gameStart('basas', { players: players.length, max_bazas: maxBazas, format })
     navigate('/basas/game')
   }
@@ -247,6 +251,58 @@ export default function BasasSetup() {
           <div className="bg-surface2 rounded-xl px-4 py-3">
             <p className="text-muted text-xs mb-1">Orden de puja</p>
             <p className="text-text text-sm font-medium">{getOrderText(players, firstDealerIndex, direction)}</p>
+          </div>
+        </section>
+
+        {/* Puntuación */}
+        <section className="flex flex-col gap-3">
+          <p className="text-muted text-xs font-medium uppercase tracking-widest">Puntuación</p>
+
+          {/* Preview de fórmula */}
+          <div className="bg-surface2 rounded-xl px-4 py-2.5 text-xs text-muted">
+            Acertar {maxBazas} bazas = <span className="text-text font-semibold">{scoreBase + scorePerBid * maxBazas} pts</span>
+            {penaltyEnabled && <> · Errar por 1 = <span className="text-danger font-semibold">-{penaltyPerBaza} pts</span></>}
+          </div>
+
+          {/* Base + por baza */}
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { label: 'Base por acertar', value: scoreBase, set: setScoreBase, min: 0 },
+              { label: 'Pts por baza', value: scorePerBid, set: setScorePerBid, min: 0 },
+            ].map(({ label, value, set, min }) => (
+              <div key={label} className="bg-surface2 rounded-xl p-3 flex flex-col gap-2">
+                <p className="text-muted text-[10px] font-medium">{label}</p>
+                <div className="flex items-center gap-2 justify-between">
+                  <button onClick={() => set(Math.max(min, value - 1))}
+                    className="w-7 h-7 rounded-lg bg-surface flex items-center justify-center text-text font-bold active:scale-95">−</button>
+                  <span className="text-text font-bold tabular-nums text-base">{value}</span>
+                  <button onClick={() => set(value + 1)}
+                    className="w-7 h-7 rounded-lg bg-surface flex items-center justify-center text-text font-bold active:scale-95">+</button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Penalty toggle + value */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setPenaltyEnabled(!penaltyEnabled)}
+              className={`flex-1 flex items-center justify-between px-4 h-12 rounded-xl border transition-colors ${penaltyEnabled ? 'border-danger/40 bg-danger/5 text-danger' : 'border-border bg-surface2 text-muted'}`}>
+              <span className="text-sm font-medium">Restar por error</span>
+              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${penaltyEnabled ? 'border-danger bg-danger' : 'border-muted'}`}>
+                {penaltyEnabled && <div className="w-2 h-2 rounded-full bg-bg"/>}
+              </div>
+            </button>
+
+            {penaltyEnabled && (
+              <div className="bg-surface2 rounded-xl p-2.5 flex items-center gap-2">
+                <button onClick={() => setPenaltyPerBaza(Math.max(1, penaltyPerBaza - 1))}
+                  className="w-7 h-7 rounded-lg bg-surface flex items-center justify-center text-text font-bold active:scale-95">−</button>
+                <span className="text-text font-bold tabular-nums w-5 text-center">{penaltyPerBaza}</span>
+                <button onClick={() => setPenaltyPerBaza(penaltyPerBaza + 1)}
+                  className="w-7 h-7 rounded-lg bg-surface flex items-center justify-center text-text font-bold active:scale-95">+</button>
+              </div>
+            )}
           </div>
         </section>
 

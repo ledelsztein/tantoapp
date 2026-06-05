@@ -11,12 +11,72 @@ function calcForbiddenBid(bids: (number | null)[], bazasAvailable: number): numb
   return forbidden >= 0 ? forbidden : null
 }
 
-// ─── Scoreboard completo (todas las rondas desde el inicio) ────────────────────
+// ─── Modal de edición de celda ────────────────────────────────────────────────
 
-// overrideTotals: muestra totales pendientes durante el summary (antes de confirmar)
+interface EditCellModalProps {
+  roundIndex: number
+  playerIndex: number
+  roundNumber: number
+  playerName: string
+  currentBid: number | null
+  currentResult: number | null
+  maxBazas: number
+  onClose: () => void
+  onSave: (bid: number | null, result: number | null) => void
+}
+
+function EditCellModal({ playerName, roundNumber, currentBid, currentResult, maxBazas, onClose, onSave }: EditCellModalProps) {
+  const [bid, setBid] = useState<number | null>(currentBid)
+  const [result, setResult] = useState<number | null>(currentResult)
+
+  const opts = Array.from({ length: maxBazas + 1 }, (_, i) => i)
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-end justify-center p-4 pb-8 bg-black/60 backdrop-blur-sm">
+      <div className="w-full max-w-sm bg-surface rounded-2xl p-5 flex flex-col gap-4 shadow-2xl">
+        <div className="flex items-center justify-between">
+          <h2 className="text-text font-semibold">{playerName} · Ronda {roundNumber}</h2>
+          <button onClick={onClose} className="text-muted active:opacity-60">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <line x1="4" y1="4" x2="14" y2="14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+              <line x1="14" y1="4" x2="4" y2="14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+            </svg>
+          </button>
+        </div>
+
+        {[
+          { label: 'Pujó', value: bid, set: setBid },
+          { label: 'Ganó', value: result, set: setResult },
+        ].map(({ label, value, set }) => (
+          <div key={label} className="flex flex-col gap-2">
+            <p className="text-muted text-xs font-medium">{label}</p>
+            <div className="flex flex-wrap gap-1.5">
+              {opts.map(n => (
+                <button key={n} onClick={() => set(n)}
+                  className={`w-10 h-9 rounded-lg text-sm font-bold transition-colors ${value === n ? 'bg-accent text-bg' : 'bg-surface2 text-text'}`}>
+                  {n}
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+
+        <button onClick={() => onSave(bid, result)}
+          className="w-full h-12 rounded-xl bg-accent text-bg font-semibold active:scale-95 transition-transform">
+          Guardar y recalcular
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ─── Scoreboard completo con edición ─────────────────────────────────────────
+
 function FullScoreboard({ onClose, overrideTotals }: { onClose?: () => void; overrideTotals?: number[] }) {
   const s = useBasasStore()
   const displayTotals = overrideTotals ?? s.totalScores
+  const [editCell, setEditCell] = useState<{ ri: number; pi: number } | null>(null)
+
   return (
     <div className={onClose ? 'fixed inset-0 z-50 flex flex-col bg-bg' : 'flex flex-col'}>
       {onClose && (
@@ -41,6 +101,7 @@ function FullScoreboard({ onClose, overrideTotals }: { onClose?: () => void; ove
                 const played = s.rounds[ri]
                 const isCurrent = ri === s.currentRoundIndex && s.currentPhase !== 'summary'
                 const isPast = ri < s.currentRoundIndex
+                const isEditable = played !== undefined  // rondas jugadas o en summary
                 return (
                   <tr key={ri} className={`border-b border-border/30 ${isCurrent ? 'bg-accent/5' : ''}`}>
                     <td className={`text-xs py-2 pr-3 font-medium tabular-nums ${isCurrent ? 'text-accent' : 'text-muted'}`}>{roundNum}</td>
@@ -50,15 +111,22 @@ function FullScoreboard({ onClose, overrideTotals }: { onClose?: () => void; ove
                       const result = played?.results[pi]
                       return (
                         <td key={pi} className="text-center py-1.5 px-1">
-                          {sc !== null && sc !== undefined ? (
-                            <div className="flex flex-col items-center gap-0.5">
-                              <span className="text-muted text-[10px] tabular-nums leading-none">
-                                {bid ?? '?'}/{result ?? '?'}
-                              </span>
-                              <span className={`text-xs font-semibold tabular-nums leading-none ${sc >= 0 ? 'text-success' : 'text-danger'}`}>
-                                {sc > 0 ? `+${sc}` : sc}
-                              </span>
-                            </div>
+                          {isEditable ? (
+                            <button onClick={() => setEditCell({ ri, pi })}
+                              className="w-full flex flex-col items-center gap-0.5 active:opacity-60 rounded-md py-0.5">
+                              {sc !== null && sc !== undefined ? (
+                                <>
+                                  <span className="text-muted text-[10px] tabular-nums leading-none">
+                                    {bid ?? '?'}/{result ?? '?'}
+                                  </span>
+                                  <span className={`text-xs font-semibold tabular-nums leading-none ${sc >= 0 ? 'text-success' : 'text-danger'}`}>
+                                    {sc > 0 ? `+${sc}` : sc}
+                                  </span>
+                                </>
+                              ) : (
+                                <span className="text-muted/50 text-xs">·</span>
+                              )}
+                            </button>
                           ) : isPast ? (
                             <span className="text-muted text-xs">—</span>
                           ) : (
@@ -83,7 +151,25 @@ function FullScoreboard({ onClose, overrideTotals }: { onClose?: () => void; ove
             </tfoot>
           </table>
         </div>
+        {onClose && <p className="text-muted text-xs text-center mt-3">Tocá cualquier celda para editar</p>}
       </div>
+
+      {editCell && (
+        <EditCellModal
+          roundIndex={editCell.ri}
+          playerIndex={editCell.pi}
+          roundNumber={s.roundSequence[editCell.ri]}
+          playerName={s.config.players[editCell.pi]}
+          currentBid={s.rounds[editCell.ri]?.bids[editCell.pi] ?? null}
+          currentResult={s.rounds[editCell.ri]?.results[editCell.pi] ?? null}
+          maxBazas={s.roundSequence[editCell.ri] ?? s.config.maxBazas}
+          onClose={() => setEditCell(null)}
+          onSave={(bid, result) => {
+            s.editRoundEntry(editCell.ri, editCell.pi, bid, result)
+            setEditCell(null)
+          }}
+        />
+      )}
     </div>
   )
 }
@@ -205,17 +291,31 @@ export default function BasasGame() {
 
           <div className="bg-surface rounded-xl p-3">
             <p className="text-muted text-xs mb-2">Orden de puja</p>
-            {round.biddingOrder.map((pi, turn) => (
-              <div key={pi} className={`flex items-center justify-between py-1.5 ${turn === s.currentPlayerTurn ? 'opacity-100' : 'opacity-40'}`}>
-                <span className={`text-sm ${turn === s.currentPlayerTurn ? 'text-text font-semibold' : 'text-muted'}`}>
-                  {s.config.players[pi]}
-                </span>
-                <div className="flex items-center gap-2">
-                  {round.bids[pi] !== null && <span className="text-accent text-sm font-medium">{round.bids[pi]}</span>}
-                  {turn === s.currentPlayerTurn && round.bids[pi] === null && <span className="text-accent text-xs">← ahora</span>}
+            {round.biddingOrder.map((pi, turn) => {
+              const last3 = s.rounds
+                .slice(0, s.currentRoundIndex)
+                .map(r => r.bids[pi])
+                .filter(b => b !== null)
+                .slice(-3) as number[]
+              return (
+                <div key={pi} className={`flex items-center justify-between py-1.5 ${turn === s.currentPlayerTurn ? 'opacity-100' : 'opacity-40'}`}>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-sm ${turn === s.currentPlayerTurn ? 'text-text font-semibold' : 'text-muted'}`}>
+                      {s.config.players[pi]}
+                    </span>
+                    {last3.length > 0 && (
+                      <span className="text-muted text-[10px] tabular-nums">
+                        {last3.join(' · ')}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {round.bids[pi] !== null && <span className="text-accent text-sm font-medium">{round.bids[pi]}</span>}
+                    {turn === s.currentPlayerTurn && round.bids[pi] === null && <span className="text-accent text-xs">← ahora</span>}
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
         <AdPlaceholder />
@@ -300,9 +400,9 @@ export default function BasasGame() {
           Resultado — Ronda {round.roundNumber}
         </p>
 
-        {/* Compact per-player result */}
+        {/* Compact per-player result — ordenado de mayor a menor puntaje */}
         <div className="bg-surface rounded-2xl overflow-hidden mb-4">
-          {round.biddingOrder.map((pi) => {
+          {[...round.biddingOrder].sort((a, b) => (round.scores[b] ?? 0) - (round.scores[a] ?? 0)).map((pi) => {
             const bid = round.bids[pi] ?? 0
             const result = round.results[pi] ?? 0
             const score = round.scores[pi] ?? 0

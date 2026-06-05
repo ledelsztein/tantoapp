@@ -25,13 +25,16 @@ function makeRound(roundNumber: number, playerCount: number, biddingOrder: numbe
   }
 }
 
-function calcScore(bid: number, result: number): number {
-  if (bid === result) return 10 + 3 * bid
-  return -3 * Math.abs(result - bid)
+function calcScore(bid: number, result: number, config: Pick<BasasConfig, 'scoreBase' | 'scorePerBid' | 'penaltyEnabled' | 'penaltyPerBaza'>): number {
+  if (bid === result) return config.scoreBase + config.scorePerBid * bid
+  if (!config.penaltyEnabled) return 0
+  return -config.penaltyPerBaza * Math.abs(result - bid)
 }
 
+const DEFAULT_SCORING = { scoreBase: 10, scorePerBid: 3, penaltyEnabled: true, penaltyPerBaza: 3 }
+
 const DEFAULT_STATE: BasasGameState = {
-  config: { players: [], maxBazas: 7, format: 'ida', firstDealerIndex: 0, direction: 'cw' },
+  config: { players: [], maxBazas: 7, format: 'ida', firstDealerIndex: 0, direction: 'cw', ...DEFAULT_SCORING },
   rounds: [],
   roundSequence: [],
   currentRoundIndex: 0,
@@ -51,6 +54,7 @@ interface BasasStore extends BasasGameState {
   submitResult: (result: number) => void
   confirmRoundSummary: () => void
   resetCurrentRoundResults: () => void
+  editRoundEntry: (roundIndex: number, playerIndex: number, bid: number | null, result: number | null) => void
   resetGame: () => void
   abandonGame: () => void
 }
@@ -103,7 +107,7 @@ export const useBasasStore = create<BasasStore>()(
         const scores = [...round.scores]
         const bid = round.bids[playerIndex] ?? 0
         results[playerIndex] = result
-        scores[playerIndex] = calcScore(bid, result)
+        scores[playerIndex] = calcScore(bid, result, s.config)
         round.results = results
         round.scores = scores
         const rounds = [...s.rounds]
@@ -152,6 +156,29 @@ export const useBasasStore = create<BasasStore>()(
         round.scores = Array(s.config.players.length).fill(null)
         rounds[s.currentRoundIndex] = round
         set({ rounds, currentPhase: 'results', currentPlayerTurn: 0, updatedAt: new Date().toISOString() })
+      },
+
+      editRoundEntry: (roundIndex, playerIndex, bid, result) => {
+        const s = get()
+        const rounds = s.rounds.map((r, ri) => {
+          if (ri !== roundIndex) return r
+          const bids = [...r.bids]
+          const results = [...r.results]
+          const scores = [...r.scores]
+          if (bid !== null) bids[playerIndex] = bid
+          if (result !== null) results[playerIndex] = result
+          if (bids[playerIndex] !== null && results[playerIndex] !== null) {
+            scores[playerIndex] = calcScore(bids[playerIndex]!, results[playerIndex]!, s.config)
+          } else {
+            scores[playerIndex] = null
+          }
+          return { ...r, bids, results, scores }
+        })
+        const newTotals = Array(s.config.players.length).fill(0)
+        rounds.forEach(r => {
+          r.scores.forEach((sc, i) => { if (sc !== null) newTotals[i] += sc })
+        })
+        set({ rounds, totalScores: newTotals, updatedAt: new Date().toISOString() })
       },
 
       resetGame: () => {
